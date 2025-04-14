@@ -73,6 +73,8 @@ func handleConnections(w http.ResponseWriter, r *http.Request) {
 		switch message["eventName"] {
 		case "matchmaking_request":
 			handleMatchmakingRequest(playerID)
+		case "init_data_request":
+			handleInitDataRequest(playerID)
 		case "end_turn":
 			handleEndTurn(playerID)
 		default:
@@ -80,7 +82,26 @@ func handleConnections(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 }
-
+func handleInitDataRequest(playerID string) {
+	for _, lobby := range lobbies {
+		if slices.Contains(lobby.Players, playerID) {
+			// Invia i dati iniziali della lobby al giocatore
+			response := Message{
+				EventName: "init_data_response",
+				Data: map[string]any{
+					"lobby_id":       lobby.ID, 
+					"players":        lobby.Players,
+					"current_turn":   lobby.CurrentTurn,
+					"my_player_id":   playerID,
+					"my_player_index": slices.Index(lobby.Players, playerID),
+					"is_my_turn": playerID == lobby.Players[lobby.CurrentTurn],
+				},
+			}
+			notifyPlayer(playerID, response)
+			return
+		}
+	}
+}
 func handleMatchmakingRequest(playerID string) {
 	lobbyMutex.Lock()
 	defer lobbyMutex.Unlock()
