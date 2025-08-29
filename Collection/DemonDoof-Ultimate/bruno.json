@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "name": "DemonDoof-Ultimate",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ]
+}

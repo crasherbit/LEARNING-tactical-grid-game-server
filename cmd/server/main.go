@@ -1,36 +1,68 @@
 package main
 
 import (
-	"fmt"
-	"log"
-	"net/http"
+	"context"
+	"log/slog"
 	"os"
-	"strconv"
+	"os/signal"
+	"syscall"
+	"time"
 
-	"tactical-game/pkg/api"
-	"tactical-game/pkg/game"
+	"demondoof-backend/internal/server"
+	"demondoof-backend/pkg/config"
+	"demondoof-backend/pkg/db"
+	"demondoof-backend/pkg/logger"
 )
 
 func main() {
-	// Ottieni la porta dalle variabili d'ambiente o usa la porta predefinita
-	port := 8080
-	if envPort := os.Getenv("PORT"); envPort != "" {
-		if p, err := strconv.Atoi(envPort); err == nil {
-			port = p
-		}
+	// Load configuration
+	cfg, err := config.Load()
+	if err != nil {
+		slog.Error("Failed to load configuration", "error", err)
+		os.Exit(1)
 	}
-	
-	// Crea il game manager
-	gameManager := game.NewGameManager()
-	
-	// Crea il server API
-	server := api.NewServer(gameManager)
-	
-	// Configura le rotte
-	router := server.SetupRoutes()
-	
-	// Avvia il server
-	addr := fmt.Sprintf(":%d", port)
-	log.Printf("Server in ascolto su http://localhost%s", addr)
-	log.Fatal(http.ListenAndServe(addr, router))
+
+	// Setup logger (unified initialization)
+	log := logger.New(logger.ParseLevel(cfg.LogLevel))
+	log.SetDefault()
+
+	slog.Info("Configuration loaded", "port", cfg.Port, "logLevel", cfg.LogLevel)
+
+	// Connect to database
+	pool, err := db.Connect(cfg.DatabaseURL)
+	if err != nil {
+		slog.Error("Failed to connect to database", "error", err)
+		os.Exit(1)
+	}
+	defer pool.Close()
+
+	// Create server
+	srv := server.New(pool, &cfg.Config)
+
+	// Start server in a goroutine
+	go func() {
+		slog.Info("Server starting", "port", cfg.Port)
+		if err := srv.Start(); err != nil {
+			slog.Error("Server error", "error", err)
+			os.Exit(1)
+		}
+	}()
+
+	// Wait for interrupt signal to gracefully shutdown the server
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+
+	slog.Info("Server shutting down...")
+
+	// Create a deadline for shutdown
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	// Shutdown server gracefully
+	if err := srv.GetApp().ShutdownWithContext(ctx); err != nil {
+		slog.Error("Server forced to shutdown", "error", err)
+	} else {
+		slog.Info("Server exited gracefully")
+	}
 }
