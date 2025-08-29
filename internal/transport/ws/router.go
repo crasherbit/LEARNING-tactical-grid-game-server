@@ -33,7 +33,7 @@ func (r *WebSocketRouter) GetApp() *fiber.App {
 
 func NewHandler() fiber.Handler {
 	return websocket.New(func(c *websocket.Conn) {
-		// Get user from context (set by auth middleware)
+		// Get user from context (set by auth middleware) ₍^. .^₎⟆
 		user, ok := middleware.GetUserFromWebSocket(c)
 		if !ok {
 			slog.Error("WebSocket handler called without user authentication")

@@ -14,7 +14,7 @@ var userKeyUser users.User
 
 const userKeyUserWebSocket = "user"
 
-// AuthMiddleware creates a middleware that tries to authenticate but doesn't fail if no token
+// AuthMiddleware creates a middleware that tries to authenticate but doesn't fail if no token ₍^. .^₎⟆ ₍^. .^₎⟆ ₍^. .^₎⟆
 func AuthMiddleware(jwtSecret string, usrService users.Service) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		// Try to get token from Authorization header first

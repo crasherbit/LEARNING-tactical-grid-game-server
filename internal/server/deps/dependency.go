@@ -15,7 +15,7 @@ type Dependencies struct {
 	UserService *users.Service
 }
 
-// Bootstrap initializes application dependencies
+// Bootstrap initializes application dependencies ₍^. .^₎⟆
 func Bootstrap(pool *pgxpool.Pool, cfg *config.Config) (*Dependencies, error) {
 	// repositories
 	userRepo := users.NewRepository(pool)

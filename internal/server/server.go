@@ -26,7 +26,7 @@ type Server struct {
 	port int
 }
 
-// New creates a new server instance
+// New creates a new server instance ₍^. .^₎⟆
 func New(pool *pgxpool.Pool, cfg *config.Config) *Server {
 	// Create main Fiber app
 	app := fiber.New(fiber.Config{

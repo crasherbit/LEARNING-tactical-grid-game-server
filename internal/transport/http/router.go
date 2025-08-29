@@ -23,7 +23,7 @@ func NewHttpRouter(deps *deps.Dependencies) *HttpRouter {
 		deps: deps,
 	}
 
-	// Health endpoints
+	// Health endpoints ₍^. .^₎⟆
 	app.Get("/health", router.healthCheck)
 
 	// API versioning
